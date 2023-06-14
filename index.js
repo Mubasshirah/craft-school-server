@@ -1,16 +1,19 @@
-const express=require('express');
-const app=express();
+const express = require('express');
+const app = express();
 require('dotenv').config();
-const cors=require('cors');
+const cors = require('cors');
 const jwt = require('jsonwebtoken');
-const port=process.env.PORT || 5000;
+const port = process.env.PORT || 5000;
 // middleware
 app.use(cors());
 app.use(express.json());
 
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const {
+  MongoClient,
+  ServerApiVersion
+} = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.lilwv8k.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -26,19 +29,32 @@ async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
-    const classCollection=client.db('craftSchool').collection('classes');
+    const classCollection = client.db('craftSchool').collection('classes');
 
     // classCollection
-    app.get('/classes',async(req,res)=>{
-      const result=await classCollection.find().sort({
-        enrolled_students:-1}).toArray();
+    app.get('/classes', async (req, res) => {
+      const result = await classCollection.find().sort({
+        enrolled_students: -1
+      }).toArray();
       res.send(result);
-   })
-    
-    // classCollection
+    })
 
+    // classCollection
+    // jwt
+    app.post('/jwt', (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: '1hr'
+      });
+      res.send({
+        token
+      });
+    })
+    // jwt
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    await client.db("admin").command({
+      ping: 1
+    });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
@@ -50,9 +66,9 @@ run().catch(console.dir);
 
 
 
-app.get('/',(req,res)=>{
-    res.send('craft school is running');
+app.get('/', (req, res) => {
+  res.send('craft school is running');
 });
-app.listen(port,()=>{
-    console.log(`craft school is running on port ${port}`)
+app.listen(port, () => {
+  console.log(`craft school is running on port ${port}`)
 });

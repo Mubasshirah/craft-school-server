@@ -28,7 +28,8 @@ const verifyJWT=(req,res,next)=>{
 
 const {
   MongoClient,
-  ServerApiVersion
+  ServerApiVersion,
+  ObjectId
 } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.lilwv8k.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -91,6 +92,13 @@ async function run() {
       }
       const query={email:email};
       const result=await selectCollection.find(query).toArray();
+      res.send(result);
+    })
+
+    app.delete('/selected/:id',async(req,res)=>{
+      const id=req.params.id;
+      const query={_id: new ObjectId(id)};
+      const result=await selectCollection.deleteOne(query);
       res.send(result);
     })
     // selectCollection

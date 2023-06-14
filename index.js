@@ -4,6 +4,7 @@ require('dotenv').config();
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const port = process.env.PORT || 5000;
+const stripe=require('stripe')(process.env.PAYMENT_SECRET_KEY);
 // middleware
 app.use(cors());
 app.use(express.json());
@@ -49,6 +50,7 @@ async function run() {
     const classCollection = client.db('craftSchool').collection('classes');
     const userCollection = client.db('craftSchool').collection('users');
     const selectCollection = client.db('craftSchool').collection('selected');
+    const paymentCollection=client.db('restaurantDb').collection('payments');
 
     // classCollection
     app.get('/classes', async (req, res) => {
@@ -113,6 +115,34 @@ async function run() {
       });
     })
     // jwt
+
+    // create payment intent
+app.post('/create-payment-intent',verifyJWT,async(req,res)=>{
+  const {price}=req.body;
+  const amount=parseInt(price*100);
+  const paymentIntent=await stripe.paymentIntents.create({
+    amount: amount,
+    currency: 'usd',
+    payment_method_types:['card']
+  });
+  res.send({
+    clientSecret: paymentIntent.client_secret 
+  })
+})
+
+// create payment intent
+// paymentCollection
+// 
+app.post('/payments',verifyJWT,async(req,res)=>{
+  const payment=req.body;
+  const insertedResult=await paymentCollection.insertOne(payment);
+  // delete purpose
+  const query={_id: {$in: payment.classItems.map(id=>new ObjectId(id))}}
+  const deletedResult=await selectCollection.deleteMany(query);
+  res.send({insertedResult,deletedResult});
+
+})
+// paymentCollection
     // Send a ping to confirm a successful connection
     await client.db("admin").command({
       ping: 1

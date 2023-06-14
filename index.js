@@ -47,6 +47,7 @@ async function run() {
     await client.connect();
     const classCollection = client.db('craftSchool').collection('classes');
     const userCollection = client.db('craftSchool').collection('users');
+    const selectCollection = client.db('craftSchool').collection('selected');
 
     // classCollection
     app.get('/classes', async (req, res) => {
@@ -69,6 +70,30 @@ async function run() {
       res.send(result);
     })
     // userCollection
+
+    // selectCollection
+    app.post('/selected',async(req,res)=>{
+      const item=req.body;
+      console.log(item);
+      const result=await selectCollection.insertOne(item);
+      res.send(result);
+    })
+
+    app.get('/selected',verifyJWT, async(req,res)=>{
+      const email=req.query.email;
+      console.log(email);
+      if(!email){
+        res.send([])
+      }
+      const decodedEmail=req.decoded.email;
+      if(email !==decodedEmail){
+        return res.status(403).send({error:true,message:'forbidden access'})
+      }
+      const query={email:email};
+      const result=await selectCollection.find(query).toArray();
+      res.send(result);
+    })
+    // selectCollection
     // jwt
     app.post('/jwt', (req, res) => {
       const user = req.body;

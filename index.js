@@ -51,7 +51,32 @@ async function run() {
     const userCollection = client.db('craftSchool').collection('users');
     const selectCollection = client.db('craftSchool').collection('selected');
     const paymentCollection=client.db('restaurantDb').collection('payments');
+    
+    // verify admin
+const verifyAdmin=async(req,res,next)=>{
+  const email=req.decoded.email;
+  const query={email:email};
+  const user=await userCollection.findOne(query);
+  if(user?.role !== 'admin'){
+    return res.status(403).send({error:true,message:'forbidden message'});
+  }
+  next();
+}
+// verify admin
 
+// isAdmin
+app.get('/users/admin/:email',verifyJWT, async(req,res)=>{
+  const email=req.params.email;
+  const decodedEmail=req.decoded.email;
+  if(decodedEmail !== email){
+    res.send({admin:false})
+  }
+  const query={email:email}
+  const user=await userCollection.findOne(query);
+  const result={admin: user?.role==='admin'};
+  res.send(result);
+})
+// isAdmin
     // classCollection
     app.get('/classes', async (req, res) => {
       const result = await classCollection.find().sort({
